@@ -12,20 +12,23 @@
 #define FLOW_SAFE_UPPER 5.0f  // Set to actual value
 ////////
 
-// Constants //
+// Constants/Settings //
+// #define DEBUG                  // Print debug lines to serial, comment out to disable
+
 #define BETA 3950              // The Beta Coefficient of the NTC thermistor
 
 #define FLOW_MULTIPLIER 2.25f  // mL per pulse of the flow sensor
 
 #define WATER_LEVEL_SENSE LOW  // Signal when water level sensor detects water
 
-#define SENSOR_SMOOTHING_ALPHA 0.2  // Exponential smoothing factor, between 0-1, 1 being no smoothing
+#define SENSOR_SMOOTHING_ALPHA  0.2  // Exponential smoothing factor, between 0-1, 1 being no smoothing
 #define SENSOR_READ_INTERVAL_MS 500
+
 #define DISPLAY_INTERVAL_MS     2000
 #define DISPLAY_BLANK_TIME_MS   200
 
-#define DISPLAY_TYPE   COMMON_CATHODE
-#define SEG_BRIGHTNESS 90      // Between -200 and 200. 0 to 100 is the standard range
+#define DISPLAY_TYPE       COMMON_CATHODE
+#define DISPLAY_BRIGHTNESS 90      // Between -200 and 200. 0 to 100 is the standard range
 ////////
 
 //// Pins ////
@@ -63,11 +66,8 @@
 #define RED_LED_PIN 13
 
 // 7 Segment Display
-//  4 Digits w/ Colon (common cathode)
-//  Not sure on the wiring, the Altronics page can't decide whether it has 12 or 16 pins,
-//   it should be 14 pins? maybe? It also shows an extra dot (L3)?
-//   https://www.altronics.com.au/p/z0195-red-0.5-inch-seven-segment-led-display-4-digit/
-//  Can also get a display with a controller which would simplify the wiring and resistors
+//  4 Digits w/ Optional Colon (common cathode)
+//  Comment out the colon pin definition to disable its use
 #define SEG_COLON_PIN A3
 const byte digitPins[] = {A0, A1, A2, A4};
 const byte segmentPins[] = {10, 12, 6, 8, 9, 11, 5, 7};
@@ -166,16 +166,22 @@ bool readWaterLevel() {
 
 void updateDisplay() {
   if (displayState == DisplayBlank) {
+#ifdef SEG_COLON_PIN
     digitalWrite(SEG_COLON_PIN, LOW);
+#endif
     sevseg.blank();
 
   } else if (displayState == DisplayTemp) {
-    digitalWrite(SEG_COLON_PIN, HIGH);          // Use colon to separate numbers
+#ifdef SEG_COLON_PIN
+    digitalWrite(SEG_COLON_PIN, HIGH);  // Use colon to separate numbers
+#endif
     int displayNum = (int)dallasTemp*100 + (int)NTCTemp;  // Both numbers already clamped between 0-99
     sevseg.setNumber(displayNum);
 
   } else if (displayState == DisplayFlow) {
+#ifdef SEG_COLON_PIN
     digitalWrite(SEG_COLON_PIN, LOW);
+#endif
     sevseg.setNumberF(flowLperMin,2);
 
   } else if (displayState == DisplayFault) {
@@ -204,7 +210,10 @@ void setup() {
   pinMode(RED_LED_PIN, OUTPUT);
 
   // 7 Segment Display
+  #ifdef SEG_COLON_PIN
   pinMode(SEG_COLON_PIN, OUTPUT);
+  #endif
+  
   byte numDigits = 4;
   bool resistorsOnSegments = false;
   bool updateWithDelays = false;
@@ -212,7 +221,7 @@ void setup() {
   bool disableDecPoint = false;
   sevseg.begin(DISPLAY_TYPE, numDigits, digitPins, segmentPins, resistorsOnSegments,
                updateWithDelays, leadingZeros, disableDecPoint);
-  sevseg.setBrightness(SEG_BRIGHTNESS);
+  sevseg.setBrightness(DISPLAY_BRIGHTNESS);
 }
 
 void loop() {
@@ -259,6 +268,7 @@ void loop() {
     updateDisplay();
     
     // Test prints
+#ifdef DEBUG
       Serial.print("NTC: ");
       Serial.print(NTCTemp);
       Serial.print(" Safe:");
@@ -274,6 +284,7 @@ void loop() {
       Serial.print(", Level safe: ");
       Serial.print(safeWaterLevel);
       Serial.println("");
+#endif
   }
 
   // Switch display view
