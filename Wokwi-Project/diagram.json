@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "author": "Ailou",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-mini", "id": "bb1", "top": 219.4, "left": 45.6, "attrs": {} },
+    { "type": "wokwi-arduino-nano", "id": "nano", "top": -52.8, "left": -38.9, "attrs": {} },
+    {
+      "type": "wokwi-7segment",
+      "id": "sevseg1",
+      "top": -61.38,
+      "left": -334.88,
+      "attrs": { "digits": "4", "colon": "1", "common": "cathode" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -128.4,
+      "left": -82.6,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": -128.4,
+      "left": -111.4,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "board-ds18b20",
+      "id": "temp1",
+      "top": -193.13,
+      "left": 148.08,
+      "attrs": { "device_id": "9F9D876799C4F708" }
+    },
+    {
+      "type": "wokwi-ntc-temperature-sensor",
+      "id": "ntc1",
+      "top": 101.8,
+      "left": 211.2,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "chip-flow-sensor-pulse-generator",
+      "id": "chip1",
+      "top": 39.42,
+      "left": 206.4,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -35,
+      "left": -116.05,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -35,
+      "left": -87.25,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": -73.4,
+      "left": 133.55,
+      "rotate": 270,
+      "attrs": { "value": "4700" }
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw1",
+      "top": 306,
+      "left": -0.7,
+      "rotate": 270,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r4",
+      "top": -131,
+      "left": -288.85,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r5",
+      "top": -131,
+      "left": -250.45,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r6",
+      "top": 51.4,
+      "left": -269.65,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r7",
+      "top": 51.4,
+      "left": -288.85,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r8",
+      "top": 51.4,
+      "left": -298.45,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r9",
+      "top": -131,
+      "left": -279.25,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r10",
+      "top": 51.4,
+      "left": -260.05,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r11",
+      "top": 51.4,
+      "left": -279.25,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r12",
+      "top": 42.35,
+      "left": -96,
+      "attrs": { "value": "220" }
+    }
+  ],
+  "connections": [
+    [ "chip1:VCC", "nano:5V", "red", [ "v-0.26", "h-140.52" ] ],
+    [ "nano:GND.1", "chip1:GND", "black", [ "v0" ] ],
+    [ "ntc1:GND", "nano:GND.1", "black", [ "h0" ] ],
+    [ "ntc1:VCC", "nano:5V", "red", [ "h0" ] ],
+    [ "temp1:VCC", "nano:5V", "red", [ "v182.4", "h-86.4" ] ],
+    [ "ntc1:OUT", "nano:A7", "green", [ "h0" ] ],
+    [ "led2:A", "r1:2", "purple", [ "v0" ] ],
+    [ "led1:A", "r2:2", "purple", [ "v0" ] ],
+    [ "nano:GND.2", "led1:C", "black", [ "v-28.8", "h-154" ] ],
+    [ "nano:GND.2", "led2:C", "black", [ "v-28.8", "h-182.8" ] ],
+    [ "temp1:GND", "nano:GND.2", "black", [ "v67.2", "h-67.2" ] ],
+    [ "nano:2", "chip1:OUT", "gold", [ "v-9.6", "h67.2", "v115.2" ] ],
+    [ "r2:1", "nano:4", "purple", [ "h9.6", "v-67.2", "h105.6" ] ],
+    [ "temp1:DQ", "nano:3", "blue", [ "v28.8", "h-96" ] ],
+    [ "r3:1", "nano:5V", "red", [ "v76.8", "h-76.8" ] ],
+    [ "r3:2", "temp1:DQ", "blue", [ "h0" ] ],
+    [ "r1:1", "nano:13", "purple", [ "v9.6", "h67.2" ] ],
+    [ "sevseg1:E", "r8:2", "green", [ "v0" ] ],
+    [ "sevseg1:D", "r7:2", "green", [ "v0" ] ],
+    [ "sevseg1:C", "r6:2", "green", [ "v0" ] ],
+    [ "sevseg1:A", "r4:1", "green", [ "v0" ] ],
+    [ "sevseg1:B", "r5:1", "green", [ "v0" ] ],
+    [ "r11:2", "sevseg1:DP", "green", [ "h0" ] ],
+    [ "r9:1", "sevseg1:F", "green", [ "h0" ] ],
+    [ "sevseg1:G", "r10:2", "green", [ "v0" ] ],
+    [ "r5:2", "nano:12", "green", [ "h0" ] ],
+    [ "r9:2", "nano:11", "green", [ "v-8.4", "h240" ] ],
+    [ "r4:2", "nano:10", "green", [ "v-18", "h259.2" ] ],
+    [ "r8:1", "nano:9", "green", [ "h-76.8", "v-268.8", "h355.2" ] ],
+    [ "r7:1", "nano:8", "green", [ "v9.6", "h-96", "v-288", "h374.4" ] ],
+    [ "r11:1", "nano:7", "green", [ "v19.2", "h-115.2", "v-307.2", "h393.6" ] ],
+    [ "r6:1", "nano:6", "green", [ "v28.8", "h-134.4", "v-326.4", "h412.8" ] ],
+    [ "r10:1", "nano:5", "green", [ "v38.4", "h-153.6", "v-345.6", "h432" ] ],
+    [ "sevseg1:DIG4", "nano:A4", "green", [ "v47.16", "h268.8" ] ],
+    [ "sevseg1:DIG3", "nano:A2", "green", [ "v-9.6", "h96", "v105.6", "h163.2" ] ],
+    [ "sevseg1:DIG2", "nano:A1", "green", [ "v-19.2", "h115.2", "v105.6", "h144" ] ],
+    [ "sevseg1:DIG1", "nano:A0", "green", [ "v-28.8", "h153.61", "v105.6", "h124.8" ] ],
+    [ "nano:GND.1", "sevseg1:COM", "black", [ "v57.6", "h-316.8" ] ],
+    [ "sevseg1:CLN", "r12:1", "green", [ "h67.2", "v115.2" ] ],
+    [ "r12:2", "nano:A3", "green", [ "h56.4", "v0", "h19.2" ] ],
+    [ "bb1:1b.i", "sw1:2", "gold", [ "v0" ] ],
+    [ "bb1:4b.h", "sw1:3", "red", [ "v0" ] ],
+    [ "bb1:6b.j", "sw1:1", "black", [ "v0" ] ],
+    [ "bb1:1b.f", "bb1:1t.e", "gold", [ "v0" ] ],
+    [ "bb1:4b.f", "bb1:4t.e", "#8f4814", [ "v0" ] ],
+    [ "bb1:6b.f", "bb1:6t.e", "blue", [ "v0" ] ],
+    [ "nano:A5", "bb1:1t.a", "gold", [ "v0" ] ],
+    [ "nano:5V", "bb1:4t.a", "red", [ "v0" ] ],
+    [ "nano:GND.1", "bb1:6t.a", "black", [ "v0" ] ],
+    [ "bb1:8t.e", "bb1:8b.f", "black", [ "v0" ] ],
+    [ "bb1:6t.a", "bb1:8t.a", "black", [ "v-19.2", "h19.2" ] ]
+  ],
+  "dependencies": {}
+}
