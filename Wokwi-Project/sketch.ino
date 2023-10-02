@@ -13,10 +13,10 @@
 ////////
 
 // Constants/Settings //
-#define DEBUG                  // Print debug lines to serial, comment out to disable
-#define PROFILE 10             // Print length of and time between long (PROFILE in ms) display updates to serial, comment out to disable
+#define DEBUG        // Print debug lines to serial, comment out to disable (This may make the display flicker)
+#define PROFILE 10   // Print length of and time between long (defined by PROFILE in ms) display updates to serial, comment out to disable
 
-#define DALLAS_RESOLUTION 9    // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are read faster)
+#define DALLAS_RESOLUTION 9    // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are maybe? read faster) (Timeout in readDS18B20() function may need increasing if this is more than 9)
 
 #define BETA 3950              // The Beta Coefficient of the NTC thermistor
 
@@ -52,6 +52,7 @@
 #define DS18B20_PIN 3
 
 // Flow Sensor
+//  Check the accuracy of the flow sensor reading by using a pulse/signal generator to provide a square wave simulated input and vary the frequency.
 #define FLOW_PIN 2
 
 // Water Level Sensor
@@ -135,6 +136,11 @@ float readNTC() {
 float readDS18B20() {
   // Return an interger temperature read from DS18B20_PIN, moving averaged and rounded down
   dallasSensors.requestTemperatures();
+  long startTime = millis();
+  // Keep refreshing the display while we wait for a temperature (Timeout of 94ms from library source for 9 bit resolution)
+  while (!dallasSensors.isConversionComplete() && (millis() - startTime < 94))
+    sevseg.refreshDisplay();
+  // TODO: getTempCByIndex() seems to take ~30ms in the simulator when a sensor is attached for some reason?
   float celsius = dallasSensors.getTempCByIndex(0);
   
   // Exponential_moving_average
@@ -208,6 +214,7 @@ void setup() {
   // DS18B20 Temperature Sensor
   dallasSensors.begin();
   dallasSensors.setResolution(DALLAS_RESOLUTION);
+  dallasSensors.setWaitForConversion(false);  // Makes the reading non-blocking, but we have to handle timing
 
   // Flow sensor
   pinMode(FLOW_PIN, INPUT_PULLUP);
