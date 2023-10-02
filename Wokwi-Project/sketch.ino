@@ -13,7 +13,8 @@
 ////////
 
 // Constants/Settings //
-// #define DEBUG                  // Print debug lines to serial, comment out to disable
+#define DEBUG                  // Print debug lines to serial, comment out to disable
+#define PROFILE 10             // Print length of and time between long (PROFILE in ms) display updates to serial, comment out to disable
 
 #define BETA 3950              // The Beta Coefficient of the NTC thermistor
 
@@ -40,7 +41,7 @@
 //    This has the side effect of the onboard LED lighting up on a fault as well.
 
 // NTC Temperature Sensor
-//  This board includes the extra 10k resistor to be wired in series.
+//  This board already includes the extra 10k resistor to be wired in series with the sensor.
 //  There is the option of using the AREF to get a reference voltage for more accurate readings,
 //   but we aren't even displaying any decimal points so probably not needed.
 #define NTC_PIN A7
@@ -107,6 +108,11 @@ bool safeFlow       = false;
 bool safeWaterLevel = false;
 
 char faultMessage[5] = "";
+
+#ifdef PROFILE
+long lastDisplayRefresh = 0;
+long lastDisplayDelay = 0;
+#endif
 ////
 
 
@@ -191,7 +197,9 @@ void updateDisplay() {
 
 
 void setup() {
+#if defined(DEBUG) || defined(PROFILE)
   Serial.begin(9600);
+#endif
   
   // NTC Temperature Sensor
 
@@ -337,5 +345,19 @@ void loop() {
     }
   }
 
+#ifdef PROFILE
+  {
+    long currTime = millis();
+    if (currTime - lastDisplayRefresh > PROFILE) {
+      Serial.print("Long display delay: ");
+      Serial.print(currTime - lastDisplayRefresh);
+      Serial.print("ms, time since last delay: ");
+      Serial.print(currTime - lastDisplayDelay);
+      Serial.println("ms");
+      lastDisplayDelay = currTime;
+    }
+    lastDisplayRefresh = millis();
+  }
+#endif
   sevseg.refreshDisplay();
 }
