@@ -16,6 +16,8 @@
 #define DEBUG                  // Print debug lines to serial, comment out to disable
 #define PROFILE 10             // Print length of and time between long (PROFILE in ms) display updates to serial, comment out to disable
 
+#define DALLAS_RESOLUTION 9    // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are read faster)
+
 #define BETA 3950              // The Beta Coefficient of the NTC thermistor
 
 #define FLOW_MULTIPLIER 2.25f  // mL per pulse of the flow sensor
@@ -205,6 +207,7 @@ void setup() {
 
   // DS18B20 Temperature Sensor
   dallasSensors.begin();
+  dallasSensors.setResolution(DALLAS_RESOLUTION);
 
   // Flow sensor
   pinMode(FLOW_PIN, INPUT_PULLUP);
