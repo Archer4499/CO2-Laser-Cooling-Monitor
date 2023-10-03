@@ -12,11 +12,11 @@
 #define FLOW_SAFE_UPPER 5.0f  // Set to actual value
 ////////
 
-// Constants/Settings //
+//// Constants/Settings ////
 #define DEBUG        // Print debug lines to serial, comment out to disable (This may make the display flicker)
 #define PROFILE 10   // Print length of and time between long (defined by PROFILE in ms) display updates to serial, comment out to disable
 
-#define DALLAS_RESOLUTION 9    // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are maybe? read faster) (Timeout in readDS18B20() function may need increasing if this is more than 9)
+#define DALLAS_RESOLUTION 10   // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are maybe? read faster)
 
 #define BETA 3950              // The Beta Coefficient of the NTC thermistor
 
@@ -135,13 +135,12 @@ float readNTC() {
 
 float readDS18B20() {
   // Return an interger temperature read from DS18B20_PIN, moving averaged and rounded down
-  dallasSensors.requestTemperatures();
-  long startTime = millis();
-  // Keep refreshing the display while we wait for a temperature (Timeout of 94ms from library source for 9 bit resolution)
-  while (!dallasSensors.isConversionComplete() && (millis() - startTime < 94))
-    sevseg.refreshDisplay();
+  
   // TODO: getTempCByIndex() seems to take ~30ms in the simulator when a sensor is attached for some reason?
   float celsius = dallasSensors.getTempCByIndex(0);
+
+  // Request the next reading
+  dallasSensors.requestTemperatures();
   
   // Exponential_moving_average
   celsius = (SENSOR_SMOOTHING_ALPHA * celsius) + (1.0 - SENSOR_SMOOTHING_ALPHA) * dallasTemp;
@@ -215,6 +214,7 @@ void setup() {
   dallasSensors.begin();
   dallasSensors.setResolution(DALLAS_RESOLUTION);
   dallasSensors.setWaitForConversion(false);  // Makes the reading non-blocking, but we have to handle timing
+  dallasSensors.requestTemperatures();
 
   // Flow sensor
   pinMode(FLOW_PIN, INPUT_PULLUP);
@@ -259,7 +259,10 @@ void loop() {
       safeTempNTC = true;
 
     // DS18B20 Temperature Sensor
-    dallasTemp = readDS18B20();
+    // Only read this sensor if it's next reading is ready
+    // In theory up to every 94ms for 9 bit and 750ms for 12 bit resolution
+    if (dallasSensors.isConversionComplete())
+      dallasTemp = readDS18B20();
     if (TEMP_SAFE_LOWER < dallasTemp && dallasTemp < TEMP_SAFE_UPPER)
       safeTempDallas = true;
 
