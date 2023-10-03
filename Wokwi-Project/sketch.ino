@@ -84,6 +84,7 @@ const byte segmentPins[] = {10, 12, 6, 8, 9, 11, 5, 7};
 // Globals
 OneWire oneWire(DS18B20_PIN);
 DallasTemperature dallasSensors(&oneWire);
+DeviceAddress dallasDeviceAddress;
 
 volatile int flowCount;
 
@@ -135,9 +136,16 @@ float readNTC() {
 
 float readDS18B20() {
   // Return an interger temperature read from DS18B20_PIN, moving averaged and rounded down
-  
-  // TODO: getTempCByIndex() seems to take ~30ms in the simulator when a sensor is attached for some reason?
-  float celsius = dallasSensors.getTempCByIndex(0);
+
+  // getTempC() takes ~13ms instead of the ~30ms getTempCByIndex() takes, mostly from searching for devices each time
+  // TODO: Possibly handle a response of DEVICE_DISCONNECTED_C (-127) when the sensor gives an invalid reading?
+  // TODO: getTempC() takes ~13ms in the simulator when a sensor is attached
+  //   isConnected() takes ~12ms
+  //     OneWire.reset() takes 1ms x 2
+  //     OneWire.select() takes 5ms
+  //   Potentially can run reset/select only in setup since only using the one i2c device
+  //   Or we can run the display refresh in a separate scheduler loop
+  float celsius = dallasSensors.getTempC(dallasDeviceAddress);
 
   // Request the next reading
   dallasSensors.requestTemperatures();
@@ -214,6 +222,7 @@ void setup() {
   dallasSensors.begin();
   dallasSensors.setResolution(DALLAS_RESOLUTION);
   dallasSensors.setWaitForConversion(false);  // Makes the reading non-blocking, but we have to handle timing
+  dallasSensors.getAddress(dallasDeviceAddress, 0);
   dallasSensors.requestTemperatures();
 
   // Flow sensor
