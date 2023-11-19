@@ -119,17 +119,17 @@ long lastDisplayDelay = 0;
 #endif
 ////
 
+float exponentialMovingAverage(float oldValue, float newValue) {
+  return (SENSOR_SMOOTHING_ALPHA * newValue) + (1.0 - SENSOR_SMOOTHING_ALPHA) * oldValue;
+}
 
 float readNTC() {
   // Return an interger temperature read from NTC_PIN, moving averaged and rounded down
   int analogValue = analogRead(NTC_PIN);
   float celsius = 1 / (log(1 / (1023.0f / analogValue - 1)) / BETA + 1.0 / 298.15f) - 273.15f;
   
-  // Exponential_moving_average
-  celsius = (SENSOR_SMOOTHING_ALPHA * celsius) + (1.0 - SENSOR_SMOOTHING_ALPHA) * NTCTemp;
-  
-  if (celsius < 0 ) celsius = 0;
-  if (celsius > 99) celsius = 99;
+  celsius = exponentialMovingAverage(NTCTemp, celsius);
+  celsius = constrain(celsius, 0, 99);
 
   return celsius;
 }
@@ -149,13 +149,10 @@ float readDS18B20() {
 
   // Request the next reading
   dallasSensors.requestTemperatures();
-  
-  // Exponential_moving_average
-  celsius = (SENSOR_SMOOTHING_ALPHA * celsius) + (1.0 - SENSOR_SMOOTHING_ALPHA) * dallasTemp;
-  
-  if (celsius < 0 ) celsius = 0;
-  if (celsius > 99) celsius = 99;
-  
+
+  celsius = exponentialMovingAverage(dallasTemp, celsius);
+  celsius = constrain(celsius, 0, 99);
+
   return celsius;
 }
 
@@ -174,8 +171,7 @@ float readFlowSensor(long timePassedms) {
   // Simplifies to:
   float flowRate = (flowCount*FLOW_MULTIPLIER*60.0f) / timePassedms;
 
-  // Exponential_moving_average
-  flowRate = (SENSOR_SMOOTHING_ALPHA * flowRate) + (1.0 - SENSOR_SMOOTHING_ALPHA) * flowLperMin;
+  flowRate = exponentialMovingAverage(flowLperMin, flowRate);
 
   flowCount = 0;
   return flowRate;
@@ -185,27 +181,28 @@ bool readWaterLevel() {
   return digitalRead(WATER_LEVEL_PIN) == WATER_LEVEL_SENSE;
 }
 
+void set_colon(bool state) {
+#ifdef SEG_COLON_PIN
+    digitalWrite(SEG_COLON_PIN, state);
+#endif
+}
+
 void updateDisplay() {
   if (displayState == DisplayBlank) {
-#ifdef SEG_COLON_PIN
-    digitalWrite(SEG_COLON_PIN, LOW);
-#endif
+    set_colon(false);
     sevseg.blank();
 
   } else if (displayState == DisplayTemp) {
-#ifdef SEG_COLON_PIN
-    digitalWrite(SEG_COLON_PIN, HIGH);  // Use colon to separate numbers
-#endif
+    set_colon(true);  // Use colon to separate numbers
     int displayNum = (int)dallasTemp*100 + (int)NTCTemp;  // Both numbers already clamped between 0-99
     sevseg.setNumber(displayNum);
 
   } else if (displayState == DisplayFlow) {
-#ifdef SEG_COLON_PIN
-    digitalWrite(SEG_COLON_PIN, LOW);
-#endif
+    set_colon(false);
     sevseg.setNumberF(flowLperMin,2);
 
   } else if (displayState == DisplayFault) {
+    set_colon(false);
     sevseg.setChars(faultMessage);
   }
 }
@@ -336,7 +333,7 @@ void loop() {
 
       } else if (displayState == DisplayFault) {
         nextDisplayState = DisplayTemp;
-        
+
       } else /*if (displayState == DisplayFlow) */{
         // Check for a fault then go to err screen next if found
         nextDisplayState = DisplayFault;
