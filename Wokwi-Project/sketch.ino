@@ -6,7 +6,7 @@
 ////////    Config    ////////
 
 //// Safety values ////
-#define TEMP_SAFE_LOWER 15
+#define TEMP_SAFE_LOWER 10
 #define TEMP_SAFE_UPPER 20
 #define FLOW_SAFE_LOWER 1.0f  // Set to actual value
 #define FLOW_SAFE_UPPER 2.5f  // Set to actual value
@@ -18,7 +18,9 @@
 
 #define DALLAS_RESOLUTION 10   // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are maybe? read faster)
 
-#define BETA 3950              // The Beta Coefficient of the NTC thermistor
+#define NTC_EXT_RESISTOR 10000.0f  // The value of the external resistor for the NTC thermistor
+#define NTC_RESIST_25C   9324.0f   // The value of the NTC thermistor resistance at 25 Celsius
+#define NTC_BETA         3157.0f   // The Beta Coefficient of the NTC thermistor
 
 #define FLOW_MULTIPLIER 2.25f  // mL per pulse of the flow sensor
 
@@ -126,7 +128,8 @@ float exponentialMovingAverage(float oldValue, float newValue) {
 float readNTC() {
   // Return an interger temperature read from NTC_PIN, moving averaged and rounded down
   int analogValue = analogRead(NTC_PIN);
-  float celsius = 1 / (log(1 / (1023.0f / analogValue - 1)) / BETA + 1.0 / 298.15f) - 273.15f;
+  float voltageValue = 1023.0f / analogValue - 1;
+  float celsius = 1 / (log(NTC_EXT_RESISTOR / NTC_RESIST_25C / voltageValue) / NTC_BETA + 1.0 / 298.15f) - 273.15f;
   
   celsius = exponentialMovingAverage(NTCTemp, celsius);
   celsius = constrain(celsius, 0, 99);
