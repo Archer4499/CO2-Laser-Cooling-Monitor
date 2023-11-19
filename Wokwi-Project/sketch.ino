@@ -7,9 +7,9 @@
 
 //// Safety values ////
 #define TEMP_SAFE_LOWER 15
-#define TEMP_SAFE_UPPER 25
-#define FLOW_SAFE_LOWER 4.0f  // Set to actual value
-#define FLOW_SAFE_UPPER 5.0f  // Set to actual value
+#define TEMP_SAFE_UPPER 20
+#define FLOW_SAFE_LOWER 1.0f  // Set to actual value
+#define FLOW_SAFE_UPPER 2.5f  // Set to actual value
 ////////
 
 //// Constants/Settings ////
