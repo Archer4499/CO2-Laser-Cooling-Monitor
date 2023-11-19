@@ -331,15 +331,13 @@ void loop() {
       // Serial.println(displayState);
       lastDisplayChange = millis();
 
-      if (displayState == DisplayFault) {
-        // Show the value of the fault next
-        if (safeWaterLevel == false || safeFlow == false) {
-          nextDisplayState = DisplayFlow;
-        } else {
-          nextDisplayState = DisplayTemp;
-        }
+      if (displayState == DisplayTemp) {
+        nextDisplayState = DisplayFlow;
 
-      } else {
+      } else if (displayState == DisplayFault) {
+        nextDisplayState = DisplayTemp;
+        
+      } else /*if (displayState == DisplayFlow) */{
         // Check for a fault then go to err screen next if found
         nextDisplayState = DisplayFault;
 
@@ -353,11 +351,7 @@ void loop() {
           strncpy(faultMessage, " DAL", 4);
         } else {
           // No fault
-          if (displayState == DisplayTemp) {
-            nextDisplayState = DisplayFlow;
-          } else {
-            nextDisplayState = DisplayTemp;
-          }
+          nextDisplayState = DisplayTemp;
         }
       }
 
