@@ -1,6 +1,10 @@
 #include <OneWire.h>
-#include <DallasTemperature.h>
 #include <SevSeg.h>
+
+#define private public  // Silly hack to allow redefining a function in this library
+#include <DallasTemperature.h>
+#define READSCRATCH     0xBE
+#define SCRATCHPAD_CRC  8
 
 
 ////////    Config    ////////
@@ -8,13 +12,13 @@
 //// Safety values ////
 #define TEMP_SAFE_LOWER 10
 #define TEMP_SAFE_UPPER 20
-#define FLOW_SAFE_LOWER 1.0f  // Set to actual value
-#define FLOW_SAFE_UPPER 2.5f  // Set to actual value
+#define FLOW_SAFE_LOWER 1.0f
+#define FLOW_SAFE_UPPER 2.5f
 ////////
 
 //// Constants/Settings ////
-#define DEBUG        // Print debug lines to serial, comment out to disable (This may make the display flicker)
-#define PROFILE 10   // Print length of and time between long (defined by PROFILE in ms) display updates to serial, comment out to disable
+// #define DEBUG        // Print debug lines to serial, comment out to disable (This may make the display flicker)
+// #define PROFILE 10   // Print length of and time between long (defined by PROFILE in ms) display updates to serial, comment out to disable
 
 #define DALLAS_RESOLUTION 10   // The resolution in bits of the DS18B20 sensor value, between 9 and 12 (lower values are maybe? read faster)
 
@@ -22,7 +26,7 @@
 #define NTC_RESIST_25C   9324.0f   // The value of the NTC thermistor resistance at 25 Celsius
 #define NTC_BETA         3157.0f   // The Beta Coefficient of the NTC thermistor
 
-#define FLOW_MULTIPLIER 2.25f  // mL per pulse of the flow sensor
+#define FLOW_MULTIPLIER  2.25f  // mL per pulse of the flow sensor
 
 #define WATER_LEVEL_SENSE LOW  // Signal when water level sensor detects water
 
@@ -45,7 +49,7 @@
 //    This has the side effect of the onboard LED lighting up on a fault as well.
 
 // NTC Temperature Sensor
-//  This board already includes the extra 10k resistor to be wired in series with the sensor.
+//  The simulator board already includes the extra 10k resistor to be wired in series with the sensor.
 //  There is the option of using the AREF to get a reference voltage for more accurate readings,
 //   but we aren't even displaying any decimal points so probably not needed.
 #define NTC_PIN A7
@@ -137,10 +141,52 @@ float readNTC() {
   return celsius;
 }
 
+float getTempC(const uint8_t* deviceAddress) {
+  // Recreated from the library code to be faster since we only have the one onewire device,
+  //  and allow refreshing the display between commands.
+  DallasTemperature::ScratchPad scratchPad;
+
+  sevseg.refreshDisplay();
+
+  // send the reset command and fail fast
+	int b = dallasSensors._wire->reset();
+	if (b == 0)
+    return DEVICE_DISCONNECTED_RAW;
+
+  sevseg.refreshDisplay();
+
+  // dallasSensors._wire->select(deviceAddress);
+  dallasSensors._wire->skip();
+
+  sevseg.refreshDisplay();
+
+  dallasSensors._wire->write(READSCRATCH);
+
+  sevseg.refreshDisplay();
+
+  for (uint8_t i = 0; i < 9; i++) {
+    scratchPad[i] = dallasSensors._wire->read();
+    sevseg.refreshDisplay();
+  }
+
+  b = dallasSensors._wire->reset();
+
+  sevseg.refreshDisplay();
+
+	bool success = (b == 1) && !dallasSensors.isAllZeros(scratchPad) && (dallasSensors._wire->crc8(scratchPad, 8) == scratchPad[SCRATCHPAD_CRC]);
+
+	if (success) {
+    int32_t rawTemp = dallasSensors.calculateTemperature(deviceAddress, scratchPad);
+	  return dallasSensors.rawToCelsius(rawTemp);
+  }
+
+	return DEVICE_DISCONNECTED_RAW;
+}
+
 float readDS18B20() {
   // Return an interger temperature read from DS18B20_PIN, moving averaged and rounded down
 
-  // getTempC() takes ~13ms instead of the ~30ms getTempCByIndex() takes, mostly from searching for devices each time
+  // The library getTempC() takes ~13ms instead of the ~30ms getTempCByIndex() takes, mostly from searching for devices each time
   // TODO: Possibly handle a response of DEVICE_DISCONNECTED_C (-127) when the sensor gives an invalid reading?
   // TODO: getTempC() takes ~13ms in the simulator when a sensor is attached
   //   isConnected() takes ~12ms
@@ -148,7 +194,8 @@ float readDS18B20() {
   //     OneWire.select() takes 5ms
   //   Potentially can run reset/select only in setup since only using the one i2c device
   //   Or we can run the display refresh in a separate scheduler loop
-  float celsius = dallasSensors.getTempC(dallasDeviceAddress);
+  // float celsius = dallasSensors.getTempC(dallasDeviceAddress);
+  float celsius = getTempC(dallasDeviceAddress);
 
   // Request the next reading
   dallasSensors.requestTemperatures();
